@@ -1,0 +1,24 @@
+{
+    "name": "Serializer",
+    "keywords": "serializer, serialization, serialize, byte, array, eeprom, configuration",
+    "description": "This library is used to serialize/deserialize defined variables into byte array",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/adamszadkowski/Serializer.git"
+    },
+    "authors": [
+        {
+            "name": "Adam Szadkowski",
+            "email": "adam@szadkowski.info",
+            "url": "http://www.szdadkowski.info",
+            "maintainer": true
+        }
+    ],
+    "dependencies": {
+        "name": "CRC32",
+        "authors": "CRC32",
+        "version": "~2.0.0"
+    },
+    "version": "0.1.0",
+    "platforms": "espressif8266"
+}
