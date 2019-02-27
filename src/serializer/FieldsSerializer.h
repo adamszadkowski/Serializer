@@ -10,7 +10,7 @@ class Node;
 
 class FieldsSerializer : public Serializer {
  public:
-  FieldsSerializer(uint32_t maxSize);
+  FieldsSerializer(uint32_t version, uint32_t maxSize);
   FieldsSerializer(const FieldsSerializer&) = delete;
   ~FieldsSerializer() override;
 
@@ -30,6 +30,7 @@ class FieldsSerializer : public Serializer {
 
  private:
   const static uint32_t OVERHEAD_SIZE;
+  uint32_t version;
   uint32_t maxSize;
   Node* elements;
 };

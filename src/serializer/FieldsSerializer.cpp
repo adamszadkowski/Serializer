@@ -19,11 +19,9 @@ class Node {
   Serializer* serializer;
 };
 
-const uint32_t FieldsSerializer::OVERHEAD_SIZE = sizeof(uint32_t) + sizeof(uint32_t);
+const uint32_t FieldsSerializer::OVERHEAD_SIZE = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint32_t);
 
-FieldsSerializer::FieldsSerializer(uint32_t maxSize) : maxSize(maxSize), elements(nullptr) {
-  Serial.printf("Constructor has been executed with maxSize: %d, elements pointer: %08x\n", FieldsSerializer::maxSize,
-                reinterpret_cast<uint32_t>(elements));
+FieldsSerializer::FieldsSerializer(uint32_t version, uint32_t maxSize) : version(version), maxSize(maxSize), elements(nullptr) {
 }
 
 FieldsSerializer::~FieldsSerializer() {
@@ -33,10 +31,13 @@ FieldsSerializer::~FieldsSerializer() {
 void FieldsSerializer::serialize(uint8_t* output) {
   uint8_t* const crcPointer = output;
   uint8_t* const sizePointer = output + sizeof(uint32_t);
-  uint8_t* const payloadPointer = sizePointer + sizeof(uint32_t);
+  uint8_t* const versionPointer = sizePointer + sizeof(uint32_t);
+  uint8_t* const payloadPointer = versionPointer + sizeof(uint32_t);
 
   uint32_t size = payloadSize();
   memcpy(sizePointer, &size, sizeof(size));
+
+  memcpy(versionPointer, &version, sizeof(version));
 
   uint8_t* writePointer = payloadPointer;
   for (Node* n = elements; n != nullptr; n = n->next) {
@@ -52,7 +53,8 @@ void FieldsSerializer::serialize(uint8_t* output) {
 void FieldsSerializer::deserialize(uint8_t* input) {
   uint8_t* const crcPointer = input;
   uint8_t* const sizePointer = input + sizeof(uint32_t);
-  uint8_t* const payloadPointer = sizePointer + sizeof(uint32_t);
+  uint8_t* const versionPointer = sizePointer + sizeof(uint32_t);
+  uint8_t* const payloadPointer = versionPointer + sizeof(uint32_t);
 
   uint32_t crc;
   memcpy(&crc, crcPointer, sizeof(crc));
@@ -60,14 +62,15 @@ void FieldsSerializer::deserialize(uint8_t* input) {
   uint32_t size;
   memcpy(&size, sizePointer, sizeof(size));
 
-  if (size <= maxSize - OVERHEAD_SIZE) {
-    if (isCRC32Valid(crc, size + sizeof(size), sizePointer)) {
-      uint8_t* readPointer = payloadPointer;
-      for (Node* n = elements; n != nullptr; n = n->next) {
-        Serializer* serializer = n->serializer;
-        serializer->deserialize(readPointer);
-        readPointer += serializer->size();
-      }
+  uint32_t storedVersion;
+  memcpy(&storedVersion, versionPointer, sizeof(storedVersion));
+
+  if (size <= maxSize - OVERHEAD_SIZE && isCRC32Valid(crc, size + sizeof(size), sizePointer) && storedVersion == version) {
+    uint8_t* readPointer = payloadPointer;
+    for (Node* n = elements; n != nullptr; n = n->next) {
+      Serializer* serializer = n->serializer;
+      serializer->deserialize(readPointer);
+      readPointer += serializer->size();
     }
   }
 }
