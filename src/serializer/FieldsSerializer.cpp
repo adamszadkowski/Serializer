@@ -3,7 +3,9 @@
 #include <CRC32.h>
 #include "serializer/field/IPAddressSerializer.h"
 #include "serializer/field/StringSerializer.h"
+#include "serializer/field/Uint16Serializer.h"
 #include "serializer/field/Uint32Serializer.h"
+#include "serializer/field/Uint8Serializer.h"
 
 namespace serializer {
 
@@ -77,6 +79,16 @@ void FieldsSerializer::deserialize(uint8_t* input) {
 
 uint32_t FieldsSerializer::size() {
   return OVERHEAD_SIZE + payloadSize();
+}
+
+FieldsSerializer& FieldsSerializer::operator<<(uint8_t* value) {
+  registerFieldSerializer(new serializer::field::Uint8Serializer(value));
+  return *this;
+}
+
+FieldsSerializer& FieldsSerializer::operator<<(uint16_t* value) {
+  registerFieldSerializer(new serializer::field::Uint16Serializer(value));
+  return *this;
 }
 
 FieldsSerializer& FieldsSerializer::operator<<(uint32_t* value) {

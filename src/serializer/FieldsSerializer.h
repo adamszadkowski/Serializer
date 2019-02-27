@@ -18,6 +18,8 @@ class FieldsSerializer : public Serializer {
   void deserialize(uint8_t* input) override;
   uint32_t size() override;
 
+  FieldsSerializer& operator<<(uint8_t* value);
+  FieldsSerializer& operator<<(uint16_t* value);
   FieldsSerializer& operator<<(uint32_t* value);
   FieldsSerializer& operator<<(String* string);
   FieldsSerializer& operator<<(IPAddress* ipAddress);
