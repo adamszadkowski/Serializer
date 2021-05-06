@@ -16,6 +16,7 @@ class FieldsSerializer : public Serializer {
 
   void serialize(uint8_t* output) override;
   void deserialize(uint8_t* input) override;
+  bool isCorrect(uint8_t* input);
   uint32_t size() override;
 
   FieldsSerializer& operator<<(uint8_t* value);

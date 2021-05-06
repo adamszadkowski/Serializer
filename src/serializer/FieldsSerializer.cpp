@@ -1,6 +1,7 @@
 #include "serializer/FieldsSerializer.h"
 
 #include <CRC32.h>
+
 #include "serializer/field/IPAddressSerializer.h"
 #include "serializer/field/StringSerializer.h"
 #include "serializer/field/Uint16Serializer.h"
@@ -53,6 +54,19 @@ void FieldsSerializer::serialize(uint8_t* output) {
 }
 
 void FieldsSerializer::deserialize(uint8_t* input) {
+  uint8_t* const payloadPointer = input + OVERHEAD_SIZE;
+
+  if (isCorrect(input)) {
+    uint8_t* readPointer = payloadPointer;
+    for (Node* n = elements; n != nullptr; n = n->next) {
+      Serializer* serializer = n->serializer;
+      serializer->deserialize(readPointer);
+      readPointer += serializer->size();
+    }
+  }
+}
+
+bool FieldsSerializer::isCorrect(uint8_t* input) {
   uint8_t* const crcPointer = input;
   uint8_t* const sizePointer = input + sizeof(uint32_t);
   uint8_t* const versionPointer = sizePointer + sizeof(uint32_t);
@@ -67,14 +81,7 @@ void FieldsSerializer::deserialize(uint8_t* input) {
   uint32_t storedVersion;
   memcpy(&storedVersion, versionPointer, sizeof(storedVersion));
 
-  if (size <= maxSize - OVERHEAD_SIZE && isCRC32Valid(crc, size + sizeof(size), sizePointer) && storedVersion == version) {
-    uint8_t* readPointer = payloadPointer;
-    for (Node* n = elements; n != nullptr; n = n->next) {
-      Serializer* serializer = n->serializer;
-      serializer->deserialize(readPointer);
-      readPointer += serializer->size();
-    }
-  }
+  return size <= maxSize - OVERHEAD_SIZE && isCRC32Valid(crc, size + sizeof(size), sizePointer) && storedVersion == version;
 }
 
 uint32_t FieldsSerializer::size() {
